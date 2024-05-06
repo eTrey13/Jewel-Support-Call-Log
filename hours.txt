@@ -1,0 +1,16 @@
+90 minutes, call, do ER diagram
+
+
+2:45
+3:05 set up basic project
+3:25 call grandpa, find eAdventist
+3:50 try to figure out API, need login
+5:05 inserted data for testing, created webpage for churches/conferences for easy access
+5:20 can view call history
+8:15 almost done with auto-update, spent time debugging venv, sql not opening, called mom to decide what to pull, eAdventist website timing out, done otherwise?
+
+5:30 hours
+
+
+
+11:40

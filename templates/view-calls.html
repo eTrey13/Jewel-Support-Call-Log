@@ -1,0 +1,56 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Support History
+{% endblock %}
+
+
+{% block main %}
+
+<h1>Support History</h1>
+
+<table id="myTable" class="table table-bordered table-striped table-responsive">
+    <thead>
+        <tr>
+            <th>Agent Name</th>
+            <th>Date</th>
+            <th>Phone Number</th>
+            <th>Treasurer</th>
+            <th>Church</th>
+            <th>Conference</th>
+            <th>Start Time</th>
+            <th>End Time</th>
+            <th>Total Time</th>
+            <th>Notes</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for call in calls %}
+        <tr id="call#{{ call.id }}">
+            <td>{{ call.agentName }}</td>
+            <td>{{ call.date }}</td>
+            <td>{{ call.treasurerPhone }}</td>
+            <td>{{ call.treasurerName }}</td>
+            <td>{{ call.churchName }}</td>
+            <td>{{ call.conferenceName }}</td>
+            <td>{{ call.startTime }}</td>
+            <td>{{ call.endTime }}</td>
+            <td>{{ call.totalTime }}</td>
+            <td>{{ call.notes }}</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+
+{% endblock %}
+
+{% block script %}
+    <script>
+
+    let table = new DataTable('#myTable', {
+        "order": []
+    });
+
+    </script>
+{% endblock %}

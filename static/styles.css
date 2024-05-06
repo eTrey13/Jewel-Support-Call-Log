@@ -1,0 +1,73 @@
+nav .navbar-brand
+{
+    /* size for brand */
+    font-size: xx-large;
+}
+
+/* colors for brand */
+nav .navbar-brand .blue
+{
+    color: #537fbe;
+}
+nav .navbar-brand .red
+{
+    color: #ea433b;
+}
+nav .navbar-brand .yellow
+{
+    color: #f5b82e;
+}
+nav .navbar-brand .green
+{
+    color: #2e944b;
+}
+
+.navbar {
+    position: fixed;
+    width: 100%;
+    left: 0;
+    top: 0;
+}
+
+main .form-control
+{
+    /* center form controls */
+    display: inline-block;
+
+    /* override Bootstrap's 100% width for form controls */
+    width: auto;
+}
+
+body .container
+{
+    margin-top: 60px;
+    margin-left: 0px;
+    margin-right: 0px;
+    max-width: none;
+    
+    /* center contents */
+    text-align: center;
+}
+
+main img
+{
+    /* constrain images on small screens */
+    max-width: 100%;
+}
+
+
+.table {
+    max-width: 100%;
+    overflow-x: auto;
+  }
+
+.whitespace
+{
+    margin-bottom: 60px;
+}
+
+/* Fixed the stupid date input being misaligned which took like 30 minutes to figure out... */
+input:is([type="date"]) {
+    display: inline-flex;
+}
+

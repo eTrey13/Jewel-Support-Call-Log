@@ -1,0 +1,46 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Churches
+{% endblock %}
+
+
+{% block main %}
+
+<h1>Churches</h1>
+
+<table id="myTable" class="table table-bordered table-striped table-responsive">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Jewel ID</th>
+            <th>eAdventist ID</th>
+            <th>Conference ID</th>
+            <th>Conference Name</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for church in churches %}
+        <tr id="church#{{ church.id }}">
+            <td>{{ church.name }}</td>
+            <td>{{ church.id }}</td>
+            <td>{{ church.eAdventistID }}</td>
+            <td>{{ church.conferenceID }}</td>
+            <td>{{ church.conferenceName }}</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+
+{% endblock %}
+
+{% block script %}
+    <script>
+
+    let table = new DataTable('#myTable', {
+        "order": []
+    });
+
+    </script>
+{% endblock %}
