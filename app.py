@@ -11,7 +11,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 import json
 from sqlalchemy import text
 
-from helpers import apology, login_required, admin_required
+from helpers import apology, login_required, admin_required, sortByID
 
 from updateChurches import getEntitiesWithoutLink
 
@@ -111,9 +111,6 @@ def login():
         session["user_name"] = rows[0]["username"]
         session["logged_in"] = True
         session["admin"] = rows[0]["admin"] == 1
-        session["center"] = rows[0]["center"] == 1
-        session["warehouse"] = rows[0]["warehouse"] == 1
-        session["volunteer"] = rows[0]["volunteer"] == 1
 
         # Redirect user to home page
         return redirect("/")
@@ -189,13 +186,10 @@ def register():
     else:
         return render_template("register.html")
 
-
 @app.route("/conferences")
 def conferences():
     conferences = dbExecute("SELECT * FROM Conferences")
     return render_template("conferences.html", conferences=conferences)
-
-
 
 @app.route("/churches")
 def churches():
@@ -207,7 +201,18 @@ def churches():
 
 @app.route("/view-calls")
 def viewCalls():
-    calls = dbExecute("""SELECT sc.*, 
+    calls = []
+    if request.args.get('churchID'):
+        calls = dbExecute("""SELECT sc.*, 
+                            con.name AS conferenceName,
+                            ch.name AS churchName,
+                            u.username AS agentName,
+                            t.name AS treasurerName,
+                            t.phoneNumber AS treasurerPhone
+                            FROM SupportCalls sc, Conferences con, Churches ch, Treasurers t, users u
+                            WHERE ch.conferenceID = con.id AND sc.treasurerID = t.id AND t.churchID = ch.id AND sc.agentID = u.id AND ch.id = ?;""", request.args.get('churchID'))
+    else:
+        calls = dbExecute("""SELECT sc.*, 
                             con.name AS conferenceName,
                             ch.name AS churchName,
                             u.username AS agentName,
@@ -215,14 +220,163 @@ def viewCalls():
                             t.phoneNumber AS treasurerPhone
                             FROM SupportCalls sc, Conferences con, Churches ch, Treasurers t, users u
                             WHERE ch.conferenceID = con.id AND sc.treasurerID = t.id AND t.churchID = ch.id AND sc.agentID = u.id;""")
+    calls.sort(key=sortByID, reverse=True)
+    
     return render_template("view-calls.html", calls=calls)
 
+@app.route("/new-call", methods=["GET", "POST"])
+@login_required
+def newCall():
+    if request.method == "POST" and not request.form.get("selectedTreasurer"):
+        treasurer = request.form.get("treasurer")
+        if treasurer and not request.form.get("newTreasurer"):
+            if dbExecute("SELECT * FROM Treasurers WHERE id = ?", treasurer):
+                return redirect(f"/new-call?treasurer={treasurer}")
+            else:
+                return apology("Bad Request - Treasurer index not found", 400)
+        else:
+            name = request.form.get("name")
+            phone = request.form.get("phone")
+            email = request.form.get("email")
+            if name and (phone or email):
+                conference = request.form.get("conference")
+                church = request.form.get("church")
+                print(conference, church)
+                print(dbExecute("""SELECT c.id AS id
+                                        FROM Churches c, Conferences con
+                                        WHERE c.conferenceID = con.id 
+                                        AND c.name = ? AND con.name = ?;""", church, conference))
+
+                churchID = dbExecute("""SELECT c.id AS id
+                                        FROM Churches c, Conferences con
+                                        WHERE c.conferenceID = con.id 
+                                        AND c.name = ? AND con.name = ?;""", church, conference)[0]["id"]
+
+                if not churchID:
+                    return apology("Bad Request - Church index not found", 400)
+
+                otherInfo = request.form.get("otherContactInfo")
+                dbExecute("INSERT INTO Treasurers (churchID, name, phoneNumber, email, otherContactInfo) VALUES (?, ?, ?, ?, ?)", churchID, name, phone, email, otherInfo)
+
+                treasurerID = dbExecute("SELECT id FROM Treasurers WHERE churchID = ? AND name = ? AND phoneNumber = ? AND email = ? AND otherContactInfo = ?", churchID, name, phone, email, otherInfo)[0]["id"]
+
+                return redirect(f"/new-call?treasurer={treasurerID}")
+            
+            return apology("Failed")
+    else:        
+        #selected a treasurer, send form to fill notes
+        if request.args.get('treasurer'):
+            treasurerID = request.args.get('treasurer')
+            if not dbExecute("SELECT * FROM Treasurers WHERE id = ?", treasurerID):
+                return redirect("/new-call")
+            treasurer = dbExecute("""SELECT t.*, 
+                                con.name AS conferenceName,
+                                c.name AS churchName
+                                FROM Churches c, Conferences con, Treasurers t
+                                WHERE c.conferenceID = con.id AND t.churchID = c.id AND t.id = ?;""", treasurerID)
+            return render_template("call-data.html", treasurer=treasurer[0])
+        
+        #went back, load with same selection
+        selectedTreasurer = None
+        if request.form.get("selectedTreasurer"):
+            selectedTreasurer = dbExecute("""SELECT t.*, 
+                                    con.name AS conferenceName,
+                                    c.name AS churchName
+                                    FROM Churches c, Conferences con, Treasurers t
+                                    WHERE c.conferenceID = con.id AND t.churchID = c.id AND t.id = ?;""", request.form.get("selectedTreasurer"))[0]
+        
+
+        churches = dbExecute("""SELECT c.*, 
+                                con.name AS conferenceName,
+                                con.id AS conferenceID
+                                FROM Churches c, Conferences con
+                                WHERE c.conferenceID = con.id;""")
+        # Initialize an empty dictionary to store arrays of objects for each conference ID
+        conferences = {}
+
+        # Iterate over the objects array
+        for church in churches:
+            conference_id = church['conferenceID']
+            
+            # If the conference ID is not already a key in the dictionary, add it with an empty array
+            if conference_id not in conferences:
+                conferences[conference_id] = []
+            
+            # Append the object to the array corresponding to its conference ID
+            conferences[conference_id].append(church)
+
+        treasurersArray = dbExecute("""SELECT t.*, 
+                                con.name AS conferenceName,
+                                c.name AS churchName
+                                FROM Churches c, Conferences con, Treasurers t
+                                WHERE c.conferenceID = con.id AND t.churchID = c.id;""")
+        
+        treasurers = {}
+
+        # Iterate over the objects array
+        for treasurer in treasurersArray:
+            conf_church_name = treasurer['conferenceName'] + treasurer['churchName']
+            
+            # If the conference ID is not already a key in the dictionary, add it with an empty array
+            if conf_church_name not in treasurers:
+                treasurers[conf_church_name] = []
+            
+            # Append the object to the array corresponding to its conference ID
+            treasurers[conf_church_name].append(treasurer)
+        
+        return render_template("new-call.html", conferences = conferences, treasurers=treasurers, treasurer=selectedTreasurer)
+
+@app.route("/save-new-ticket", methods=["POST"])
+@login_required
+def saveNewTicket():
+    treasurerID = request.form.get("treasurer")
+    treasurer = dbExecute("""SELECT *
+                            FROM Treasurers
+                            WHERE id = ?;""", treasurerID)[0]
+        
+    if not treasurer:
+        return apology("Bad Request - Treasurer index not found", 400)
+    
+    if "user_id" not in session:
+        return apology("Bad Request - Agent index not found (not logged in)", 400)
+    agentID = session["user_id"]
+
+    startTime = request.form.get("startTime")
+    endTime = request.form.get("endTime")
+    notes = request.form.get("message")
+    current_date = datetime.now().strftime("%d-%m-%Y")
+
+    #TODO timezones?
+
+    #validate time input
+    pattern = r'^([01]?[0-9]|2[0-3]):[0-5][0-9]$'
+    if not (re.match(pattern, startTime) and re.match(pattern, endTime)):
+        return apology("Bad Request - Invalid time", 400)
+    # Split the time strings into hours and minutes
+    hours1, minutes1 = map(int, startTime.split(":"))
+    hours2, minutes2 = map(int, endTime.split(":"))
+    if hours1 > hours2:
+        hours2 += 24
+    # Calculate the total minutes for each time
+    total_minutes1 = hours1 * 60 + minutes1
+    total_minutes2 = hours2 * 60 + minutes2
+    # Calculate the difference in minutes
+    totalTime = total_minutes2 - total_minutes1
+
+
+    dbExecute("INSERT INTO SupportCalls (treasurerID, agentID, startTime, endTime, notes, date, totalTime) VALUES (?, ?, ?, ? ,?, ?, ?)", treasurerID, agentID, startTime, endTime, notes, current_date, totalTime)
+
+    #TODO link to ?churchID=x and show all tickets for that church including new one
+    #return redirect("/churches")
+    print(treasurer)
+    return redirect(f"/view-calls?churchID={treasurer['churchID']}")
 
 @app.route("/test")
 def test():
     return render_template("test.html")
 
 @app.route("/update-churches")
+@admin_required
 def updateChurches():
     conferences = getEntitiesWithoutLink("")
     for conference in conferences:

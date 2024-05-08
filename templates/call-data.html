@@ -1,0 +1,47 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Add New Call
+{% endblock %}
+
+
+{% block main %}
+
+
+<h1>Add New Call</h1>
+
+    <br>
+
+    <h3>{{ treasurer.conferenceName }} {{ treasurer.churchName }} {{ treasurer.name }}</h3>
+        
+    <form action="/new-call" method="POST">
+        <input type="text" name="selectedTreasurer" value="{{ treasurer.id }}" hidden>
+        <button class="btn btn-primary" type="submit">Go back</button>
+    </form>
+    
+    <form action="/save-new-ticket" method="POST" onsubmit="return validateForm()">
+        <input type="text" name="treasurer" value="{{ treasurer.id }}" hidden>
+
+        <label for="meeting-time">Start Time:</label>
+        <input type="time" id="startTime" name="startTime" required>
+        <label for="meeting-time">End Time:</label>
+        <input type="time" id="endTime" name="endTime" required>
+        
+        <label for="message">Call Notes:</label>
+        <textarea id="message" name="message" rows="8" cols="50"></textarea>
+        
+
+        
+        <button class="btn btn-primary" type="submit">Add to Log</button>
+    </form>
+
+<div class="whitespace"></div>
+{% endblock %}
+
+{% block script %}
+<script>
+
+
+</script>
+  
+{% endblock %}

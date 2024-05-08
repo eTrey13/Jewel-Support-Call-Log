@@ -14,3 +14,43 @@
 
 
 11:40
+12:30 delay done appropriately, takes 15 minutes(?) but can pull all data, data pulled and testing data updated with correct IDs
+
+12:55 break
+2:10 have app working on pythonanywhere (uploaded to github)
+2:35 set up gitignore, recloned to pythonanywhere, cut file usage by about 1/3
+2:50 ready to start coding form for entering new call data
+
+3:00 break
+3:15 starting on form, need to decide how to do conference/church/treasurer selector
+3:25 need to wait for next steps
+
+3:10 hours
+
+
+2:15
+2:40 call mom, figure out next steps, use text boxes...
+3:15 working on only autocomplete, found documentation
+
+3:30 break
+4:35 decent first draft of conference/church picker. No new options, no treasurer, no backend, but shows if acceptable options and has good dropdown menu.
+5:00 call mom, this works well, talk about next plans
+5:35 treasurer showing up when it should, can't add new, no backend
+5:45 starting backend
+
+8:25
+9:15 have front end verification for only submitting with valid church and valid treasurer or valid info for new treasurer
+
+9:30 break
+10:05 backend for selecting treasurer done, sends to page to put call information (very rough page), currently ignores new treasurer but shows it got it
+
+4:40 hours
+
+
+1:25
+2:25 new treasurers get added, go back button in call info goes back to select treasurer with same options selected
+3:00 can save call, but incomplete functionality (need to require start/end time, calculate total time, add date...)
+
+3:20 break
+3:40 requires time and calculates total, adds date
+3:55 everything works? (for that)

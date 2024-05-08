@@ -1,0 +1,295 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Add New Call
+{% endblock %}
+
+{% block style %}
+<style>
+    .ui-autocomplete {
+      max-height: 150px;
+      overflow-y: auto;
+      /* prevent horizontal scrollbar */
+      overflow-x: hidden;
+    }
+    /* IE 6 doesn't support max-height
+     * we use height instead, but this forces the menu to always be this tall
+     */
+    * html .ui-autocomplete {
+      height: 100px;
+    }
+</style>
+{% endblock %}
+
+{% block main %}
+<script src="https://code.jquery.com/ui/1.13.1/jquery-ui.min.js"></script>
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.13.1/themes/base/jquery-ui.css">
+
+
+<h1>Add New Call</h1>
+
+    <br>
+    
+    <form action="/new-call" method="POST" onsubmit="return validateForm()">
+
+        <div class="form-group">
+            <input style="width:300px;" class="form-control" type="text" name="conference" id="conference" placeholder="Type to select Conference" required value="{{ treasurer.conferenceName }}">
+            <input style="width:300px;" class="form-control" type="text" name="church" id="church" placeholder="Type to select Church" required value="{{ treasurer.churchName }}">
+        </div>
+        <div class="form-group">
+            <label for="treasurer">Select a Treasurer:</label>
+            <select id="treasurer" name="treasurer">
+                <!-- Options will be populated dynamically -->
+            </select>
+        </div>
+        <div class="form-group">
+            <div class="form-check">
+                <!--
+                <input class="form-check-input" type="checkbox" id="newCurch" name="newCurch">
+                <label class="form-check-label" for="newCurch">
+                    Add New Church
+                </label>
+                -->
+                <input class="form-check-input" type="checkbox" id="newTreasurer" name="newTreasurer">
+                <label class="form-check-label" for="newTreasurer">
+                    Add New Treasurer
+                </label>
+            </div>
+            <input class="form-control" type="text" name="name" id="name" placeholder="Name">
+            <input class="form-control" type="tel" name="phone" id="phone" pattern="\(\d{3}\) \d{3}-\d{4}" placeholder="(123)-456-7890" oninput="formatPhoneNumber(this)">
+            <input class="form-control" type="email" name="email" id="email" placeholder="Email">
+        </div>
+        <div class="form-group">
+            <textarea id="otherContactInfo" name="otherContactInfo" rows="2" cols="30" placeholder="Other contact information:"></textarea>
+        </div>
+        <!--
+        <label for="meeting-time">Start Time:</label>
+        <input type="time" id="meeting-time" name="meeting-time">
+        <label for="meeting-time">End Time:</label>
+        <input type="time" id="meeting-time" name="meeting-time">
+        
+        <label for="message">Call Notes:</label>
+        <textarea id="message" name="message" rows="8" cols="50"></textarea>
+        -->
+
+        
+        <button class="btn btn-primary" type="submit">Add to Log</button>
+    </form>
+
+<div class="whitespace"></div>
+{% endblock %}
+
+{% block script %}
+<script>
+
+    // Define your state-county data here
+    const conferences_churches = {
+        //{% for key, conference in conferences.items() %}
+        "{{ conference[0].conferenceName }}": [
+            //{% for church in conference %}
+            "{{ church.name | safe }}",
+            //{% endfor %}
+        ],        
+        //{% endfor %}
+    };
+    const treasurers = {
+        //{% for key, group in treasurers.items() %}
+        "{{ key }}": [
+            //{% for treasurer in group %}
+            {
+                name: "{{ treasurer.name if treasurer.name else ''}}",
+                id: "{{ treasurer.id }}",
+                phone: "{{ treasurer.phoneNumber if treasurer.phoneNumber else ''}}",
+                email: "{{ treasurer.email if treasurer.email else ''}}",
+            },
+            //{% endfor %}
+        ],        
+        //{% endfor %}
+    }
+
+  
+    // Initialize autocomplete for conference input field
+    $("#conference").autocomplete({
+        minLength: 0,
+        delay: 0,
+        source: Object.keys(conferences_churches),
+        select: function(event, ui) {
+            // Call validateInputConference when an option is selected
+            validateInputConference(null, ui.item.value);
+        }
+    });
+    $("#conference").on("click", function() {
+        $(this).autocomplete("search", $(this).val());
+    });
+  
+    // Initialize autocomplete for church input field
+    $("#church").autocomplete({
+        minLength: 0,
+        delay: 0,
+        source: function(request, response) {
+            const selectedConference = $("#conference").val();
+            const churches = conferences_churches[selectedConference] || [];
+            response(churches.filter(church => church.toLowerCase().includes(request.term.toLowerCase())));
+        },
+        select: function(event, ui) {
+            // Call validateInputChurch when an option is selected
+            validateInputChurch(null, ui.item.value);
+        }
+    });
+    $("#church").on("click", function() {
+        $(this).autocomplete("search", $(this).val());
+    });
+  
+    // Function to validate input and update border color
+    function validateInputConference(stuff, val) {
+        validOptions = Object.keys(conferences_churches);
+        const input = document.getElementById('conference');
+        const value = val || input.value;
+
+        validateInput(input, value, validOptions)
+        validateInputChurch(null, null, val)
+    }
+    function validateInputChurch(stuff, val, conf) {
+        const selectedConference = conf || document.getElementById('conference').value;
+        const validOptions = conferences_churches[selectedConference] || [];
+
+        const input = document.getElementById('church');
+        const value = val || input.value;
+
+        validateInput(input, value, validOptions)
+        updateTreasurerOptions(conf, val)
+    }
+    function validateInput(inputBox, value, validOptions) {
+        // Check if input value is empty
+        if (value === '') {
+            inputBox.style.border = '3px solid';
+            inputBox.dataset.inDB = 0;
+            return;
+        }
+
+        // Check if input value is in the valid options array
+        if (validOptions.includes(value)) {
+            inputBox.style.border = '3px solid mediumspringgreen';
+            inputBox.dataset.inDB = 1;
+        } else {
+            inputBox.style.border = '3px solid red';
+            inputBox.dataset.inDB = 0;
+        }
+    }
+
+    // Event listener for input value change
+    document.getElementById('conference').addEventListener('input', validateInputConference);
+    document.getElementById('church').addEventListener('input', validateInputChurch);
+
+    function updateTreasurerOptions(conf, church) {
+        const selectedConference = conf || $("#conference").val();
+        const selectedChurch = church || $("#church").val();
+        const selectedTreasurers = treasurers[selectedConference+selectedChurch] || [];
+        $("#treasurer").empty();
+        selectedTreasurers.forEach(treasurer => {
+            text = treasurer.name
+            contactInfo = treasurer.phone && treasurer.email ? treasurer.phone + " - " + treasurer.email : treasurer.phone + treasurer.email;
+            text = text && contactInfo ? text + " - " + contactInfo : text + contactInfo;
+            $("#treasurer").append($("<option></option>").text(text).val(treasurer.id));
+        });
+        $("#treasurer").prop('disabled', false);
+        if (selectedTreasurers.length == 0) {
+            $("#treasurer").append($("<option></option>").text("No Treasurers Found").val(-1));
+            $("#treasurer").prop('disabled', true);
+        }
+    }
+
+    validateInputConference();
+    (function(value) {
+        var selectElement = document.getElementById("treasurer");
+        for (let i in selectElement.options) {
+            if (selectElement.options[i].value == value) {
+                selectElement.selectedIndex = i;
+                break;
+            }
+        }
+    })({{ treasurer.id }});
+
+    function formatPhoneNumber(input) {
+        let cursorPosition = input.selectionStart; // Get the cursor position
+        let val = input.value;
+        let charAdded = val[cursorPosition-1];
+        let numBeforeCursor = val.slice(0, cursorPosition).replace(/\D/g, '').length;
+
+
+        let phoneNumber = val.replace(/\D/g, ''); // Remove non-numeric characters
+        if (phoneNumber.length > 10) {
+            if (charAdded.replace(/\D/g, '') !== "" && numBeforeCursor <= 10) {
+                phoneNumber = phoneNumber.slice(0, numBeforeCursor) + phoneNumber.slice(numBeforeCursor+1, 11);
+            } else {
+                phoneNumber = phoneNumber.slice(0, 10);
+            }
+        }
+
+        cursorPosition = numBeforeCursor;
+        if (numBeforeCursor > 0) {
+            cursorPosition++;
+            if (numBeforeCursor > 3) {
+                cursorPosition+=2;
+                if (numBeforeCursor > 6) {
+                    cursorPosition++;
+                }
+            }
+        }
+        if (phoneNumber.length <= 10) {
+            let formattedNumber = '';
+
+            if (phoneNumber.length > 0) {
+                formattedNumber += `(${phoneNumber.slice(0, 3)}`;
+                if (phoneNumber.length > 3) {
+                    formattedNumber += `) ${phoneNumber.slice(3, 6)}`;
+
+                    if (phoneNumber.length > 6) {
+                        formattedNumber += `-${phoneNumber.slice(6, 10)}`;
+                    }
+                }
+            }
+
+            input.value = formattedNumber;
+        }
+
+        input.setSelectionRange(cursorPosition, cursorPosition);
+    }
+
+    function validateForm() {
+        let validConf = document.getElementById("conference").dataset.inDB;
+        let validChurch = document.getElementById("church").dataset.inDB;
+        
+        if (!(validConf*1) || !(validChurch*1)) {
+            //do something with checkbox
+            alert("Select a valid conference and church.");
+            return false;
+        }
+
+
+        let treasurerSelected = document.getElementById("treasurer").value;
+        if (treasurerSelected == -1) {
+            let newTreasurer = document.getElementById("newTreasurer").checked;
+            if (!newTreasurer) {
+                alert("No Treasurer selected.");
+                return false;
+            } else {
+                let name = document.getElementById("name").value;
+                let phone = document.getElementById("phone").value;
+                let email = document.getElementById("email").value;
+                if (!(name && (phone || email))) {
+                    alert("Need to fill out treasurer name and phone or email");
+                    return false;
+                }
+            }
+        }
+
+
+        // If validation passes, allow form submission
+        return true;
+    }
+
+
+</script>
+  
+{% endblock %}
