@@ -116,11 +116,11 @@ sql(f"""INSERT INTO Users (username, email, admin, hash, password) VALUES
 """)
 
 sql(f"""INSERT INTO Treasurers (name, phoneNumber, churchID) VALUES 
-('Lindomar Fuentes', '978-837-9554', 187),
-('Jesse Alli', '234-855-4764', 80),
-('Annette', '614-302-3185', 61),
-('Rosy', '917-803-2032', 136),
-('Rosalinda Hernandez', '603-264-3909', 198);
+('Lindomar Fuentes', '978-837-9554', 3778),
+('Jesse Alli', '234-855-4764', 349),
+('Annette', '614-302-3185', 330),
+('Rosy', '917-803-2032', 3727),
+('Rosalinda Hernandez', '603-264-3909', 3789);
 """)
 
 sql(f"""INSERT INTO SupportCalls (treasurerID, agentID, date, startTime, endTime, totalTime, notes) VALUES 

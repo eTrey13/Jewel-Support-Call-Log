@@ -54,3 +54,37 @@
 3:20 break
 3:40 requires time and calculates total, adds date
 3:55 everything works? (for that)
+4:00 saved to github, reuploaded to pythonanywhere
+5:00 showed to mom, have huge todo list
+
+5:30 break
+6:35 Figured how to include template, made for support calls, nice date and changed order, column width is messy
+7:10 nicer view for single church call history, links to non-functional church page
+7:30 started work on church page (Church and conference names, treasurer table)
+
+5:15 hours
+
+2:10
+2:50 added table with calls, lots of messing around to have both centered correctly
+3:40 fixed test DB entries to match format, kept trying to fix table width stuff
+
+3:55 break
+(4:20 created file to put DB functions)
+5:20 can filter call history by church or clear filter from there (conference filter disabled)
+5:35 can filter by conference, need to change UI to show conference name at top and not on table
+
+8:50
+9:05 filters working great
+
+9:15 break
+9:25
+9:45 break
+10:15 basic dashboard set up with calls for that agent. Need months filter and hours
+10:35 rewrote function that gets calls, ready to add filtering by month to it
+
+4:35 hours
+
+2:30
+3:00 shows months, hours, need ability to change month
+3:35 can change month
+3:55 conference page done (except no contact info in DB to show)

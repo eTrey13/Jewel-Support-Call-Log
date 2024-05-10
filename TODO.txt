@@ -1,1 +1,47 @@
 Treasurer needs spanish in form
+
+-Nicer date format
+Notes in support history cutting out ------------
+Hide start/end time -----------
+-When only showing one church, only show church/conference on top
+-Church clickable link to church page
+
+-Church page - full treasurer info, notes, link to church call history tickets and time
+
+-Change default entries shown in table
+
+-Have church/conference selector at top of call log pages
+
+-Dashboard for agents showing their tickets and total time, restrictable by month
+Admin can see each agents Dashboard
+-Page for each conference showing their tickets and total time, who to contact for support
+
+Agents can edit their own tickets the same delay
+
+Add new churches
+
+Standardize terminology: what?
+
+admins dashboards - manage users/passwords, add churches/conferemces, view call minutes, edit tickets
+
+database field, notes on treasurer
+
+Ask grandpa what to do for yellow conference - confirm instead of alert
+
+Add agent names
+
+Page with all agents and contact info
+
+Indicate spanish is needed when selecting treasurer
+
+checkboxes bigger/not blue?
+
+edit (add? remove?) treasurers in church page
+
+figure out the table width stuff...
+
+create a new helper file with functions to call to get certain DB stuff, figure out how to do sql the same there
+
+users that aren't agents?
+
+add contact info to conferences Table, show in conference page

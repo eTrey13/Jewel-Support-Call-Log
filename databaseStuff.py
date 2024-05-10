@@ -28,11 +28,28 @@ def sql(code, *args):
     return connection.execute(text(code))
 
 
+sql("DELETE FROM SupportCalls")
+sql("DELETE FROM Treasurers")
 
-sql("""ALTER TABLE Treasurers
-ADD otherContactInfo TEXT;""")
 
+sql("UPDATE SQLITE_SEQUENCE SET seq = 0 WHERE name = 'SupportCalls'")
+sql("UPDATE SQLITE_SEQUENCE SET seq = 0 WHERE name = 'Treasurers'")
 
+sql(f"""INSERT INTO Treasurers (name, phoneNumber, churchID) VALUES 
+('Lindomar Fuentes', '(978) 837-9554', 3778),
+('Jesse Alli', '(234) 855-4764', 349),
+('Annette', '(614) 302-3185', 330),
+('Rosy', '(917) 803-2032', 3727),
+('Rosalinda Hernandez', '(603) 264-3909', 3789);
+""")
+
+sql(f"""INSERT INTO SupportCalls (treasurerID, agentID, date, startTime, endTime, totalTime, notes) VALUES 
+(1, 1, '12-04-2024', '12:39', '13:01', 22, "Database & install supposedly corrupted by Windows update, sent new install & Feb backup"),
+(1, 1, '12-04-2024', '16:17', '16:32', 15, "Emailed database backup, answered ?’s re backing up, set up backup to conf server, talked up ach transfer"),
+(5, 1, '04-04-2024', '17:32', '18:00', 28, "Trouble with AG import. I think she didn’t complete the deposit and continued adding additional envelopes from another week. Not sure."),
+(5, 1, '08-04-2024', '16:30', '17:04', 34, "English understanding issue"),
+(5, 1, '22-04-2024', '14:17', '14:36', 19, "Needed to edit current deposit, know how to change bank account for deposit");
+""")
 # Close the connection when you're done
 connection.commit()
 connection.close()

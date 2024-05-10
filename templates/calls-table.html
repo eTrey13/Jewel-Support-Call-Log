@@ -1,0 +1,78 @@
+{% set months = ["", "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"] %}
+
+<table id="callsTable" class="table table-bordered table-striped table-responsive">
+    <thead>
+        <tr>
+            <th>Agent Name</th>
+            <th>Date</th>
+            <th>Treasurer</th>
+            <th>Phone Number</th>
+            <th>Total Time (Minutes)</th>
+            <th>Notes</th>
+            {% if not selection.churchName %}
+            <th>Church</th>
+            {% endif %}
+            {% if not selection.conferenceName %}
+            <th>Conference</th>
+            {% endif %}
+            <th>Start Time</th>
+            <th>End Time</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for call in calls %}
+        <tr id="call#{{ call.id }}">
+            <td>{{ call.agentName }}</td>
+            {% set date_components = call.date.split('-') %}
+            {% set day = date_components[0]|int %}
+            {% set month = date_components[1]|int %}
+            {% set year = date_components[2]|int %}
+            {% set month_name = months[month] %}
+            <td>{{ day }} {{ month_name }}, {{ year }}</td>
+            <td>{{ call.treasurerName }}</td>
+            <td>{{ call.treasurerPhone }}</td>
+            <td>{{ call.totalTime }}</td>
+            <td>{{ call.notes }}</td>
+            {% if not selection.churchName %}
+            <td><a href="/churches?churchID={{ call.churchID }}">{{ call.churchName }}</a></td>
+            {% endif %}
+            {% if not selection.conferenceName %}
+            <td>{{ call.conferenceName }}</td>
+            {% endif %}
+            <td>{{ call.startTime }}</td>
+            <td>{{ call.endTime }}</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+<script>
+
+    let table = new DataTable('#callsTable', {
+        order: [],
+        //{% if not doPaging %}
+            paging: false,
+        //{% endif %}
+        //columns: [null, null, null, null, null, { width: '50em' }, null, null],
+        columnDefs: [
+            //{ "width": "100px", "targets": 0 },
+            { width: "50em", targets: 5 },
+            //{ width: "50px", targets: 4 },
+        ],
+        //autoWidth: false,
+        //stateSave: true,
+        //lengthMenu: [10, 25, 50, { label: 'All', value: -1 }]
+
+    });
+
+</script>
+
+<!--
+<style>
+/*#callsTable {
+    min-width: 1200px;
+    margin: 0 auto;
+    overflow-x: auto;
+}*/
+</style>
+-->

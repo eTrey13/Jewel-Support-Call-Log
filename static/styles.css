@@ -71,3 +71,10 @@ input:is([type="date"]) {
     display: inline-flex;
 }
 
+
+table a {
+    color: black; /* Set the color to black or any other color you prefer */
+}
+table a:hover {
+    color: black; /* Set the hover color to black */
+}

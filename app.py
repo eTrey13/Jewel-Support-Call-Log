@@ -11,9 +11,10 @@ from werkzeug.security import check_password_hash, generate_password_hash
 import json
 from sqlalchemy import text
 
-from helpers import apology, login_required, admin_required, sortByID
+from helpers import *
 
 from updateChurches import getEntitiesWithoutLink
+from db_helpers import *
 
 # Configure application
 app = Flask(__name__)
@@ -39,41 +40,7 @@ Session(app)
 # Different sql database that works?
 db_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'database.db')
 app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_file_path}'
-db = SQLAlchemy(app)
-
-# matches the functionality of the function I used before
-def dbExecute(sqlCode, *args):
-    result = None
-
-    # If we only have the sql code, run it.
-    # If we have multiple arguments, if we have one dict we can just pass it, otherwise, we need to change the ? to using a dict we create.
-    if len(args) != 0:
-        if type(args[0]) == dict:
-            result = db.session.execute(text(sqlCode), args[0])
-        else:
-            d = {}
-            for i in range(len(args)):
-                sqlCode = sqlCode.replace("?", ":named" + str(i), 1)
-                d["named" + str(i)] = args[i]
-            result = db.session.execute(text(sqlCode), d)
-    else:
-        result = db.session.execute(text(sqlCode))
-
-    try:
-        # Get all rows. Will fail if was an insert statement which will trigger the except clause.
-        # Converts array of rows where each row is an array to an array where rows are dicts to easily access specific columns
-        keys = list(result.keys())
-        rows = result.fetchall()
-        toReturn = []
-        for row in rows:
-            obj = {}
-            for i in range(len(keys)):
-                obj[keys[i]] = row[i]
-            toReturn.append(obj)
-
-        return toReturn
-    except Exception as e:
-        db.session.commit()
+db.init_app(app)
 
 
 @app.route("/")
@@ -118,7 +85,6 @@ def login():
     # User reached route via GET (as by clicking a link or via redirect)
     else:
         return render_template("login.html")
-
 
 @app.route("/logout")
 def logout():
@@ -188,44 +154,112 @@ def register():
 
 @app.route("/conferences")
 def conferences():
+    #show info of one conference
+    conferenceID = request.args.get('conferenceID')
+    if conferenceID:
+        conference = dbExecute("""SELECT name AS conferenceName,
+                            id AS conferenceID
+                            FROM Conferences
+                            WHERE id = ?;""", conferenceID)
+        if not conference:
+            return redirect("/conferences")
+        conference = conference[0]
+
+
+        month = validateMonthOrGetCurrent(request.args.get('month'))
+        if not month:
+            return redirect("/dashboard")
+        
+        calls = getSupportCallsWithOptionalFilters("conference", conferenceID, month=month)
+        sumTotalTime = getSupportCallsTotalTimeWithOptionalFilters("conference", conferenceID, month=month)
+    
+
+        return render_template("conference-info.html", conference=conference, calls=calls, month=month, sumTotalTime=sumTotalTime, currentYear=datetime.now().year)
+
+    
     conferences = dbExecute("SELECT * FROM Conferences")
     return render_template("conferences.html", conferences=conferences)
 
 @app.route("/churches")
 def churches():
+    #show info of one church
+    churchID = request.args.get('churchID')
+    if churchID:
+        church = dbExecute("""SELECT con.name AS conferenceName,
+                            ch.name AS churchName,
+                            ch.id AS churchID,
+                            con.id AS conferenceID
+                            FROM Conferences con, Churches ch
+                            WHERE ch.conferenceID = con.id AND ch.id = ?;""", churchID)
+        if not church:
+            return redirect("/churches")
+        church = church[0]
+
+        treasurers = dbExecute("SELECT * FROM Treasurers WHERE churchID = ?", churchID)
+
+        calls = getSupportCallsWithOptionalFilters("church", churchID)
+
+        return render_template("church-info.html", church=church, treasurers=treasurers, calls=calls)
+
+    #show all churches
     churches = dbExecute("""SELECT c.*, 
                             con.name AS conferenceName
                             FROM Churches c, Conferences con
                             WHERE c.conferenceID = con.id;""")
     return render_template("churches.html", churches=churches)
 
-@app.route("/view-calls")
+@app.route("/view-calls", methods=["GET", "POST"])
 def viewCalls():
+    if request.method == "POST":
+        churchID = getChurchIdFromChurchAndConferenceName(request.form.get("conference"), request.form.get("church"))
+        if churchID:
+            return redirect(f"/view-calls?churchID={churchID}")
+        conferenceID = getConferenceIdFromConferenceName(request.form.get("conference"))
+        if conferenceID:
+            return redirect(f"/view-calls?conferenceID={conferenceID}")
+    
     calls = []
-    if request.args.get('churchID'):
-        calls = dbExecute("""SELECT sc.*, 
-                            con.name AS conferenceName,
+    churchID = request.args.get('churchID')
+    conferenceID = request.args.get('conferenceID')
+    selection = {}
+    if churchID:
+        calls = getSupportCallsWithOptionalFilters("church", churchID)
+        church = dbExecute("""SELECT con.name AS conferenceName,
                             ch.name AS churchName,
-                            u.username AS agentName,
-                            t.name AS treasurerName,
-                            t.phoneNumber AS treasurerPhone
-                            FROM SupportCalls sc, Conferences con, Churches ch, Treasurers t, users u
-                            WHERE ch.conferenceID = con.id AND sc.treasurerID = t.id AND t.churchID = ch.id AND sc.agentID = u.id AND ch.id = ?;""", request.args.get('churchID'))
+                            ch.id AS churchID,
+                            con.id AS conferenceID
+                            FROM Conferences con, Churches ch
+                            WHERE ch.conferenceID = con.id AND ch.id = ?;""", churchID)
+        if not church:
+            return redirect("/view-calls")
+        selection = church[0]
+    elif conferenceID:
+        calls = getSupportCallsWithOptionalFilters("conference", conferenceID)
+        conference = dbExecute("""SELECT name AS conferenceName,
+                                id AS conferenceID
+                                FROM Conferences
+                                WHERE id = ?;""", conferenceID)
+        if not conference:
+            return redirect("/view-calls")
+        selection = conference[0]
     else:
         calls = dbExecute("""SELECT sc.*, 
                             con.name AS conferenceName,
                             ch.name AS churchName,
                             u.username AS agentName,
                             t.name AS treasurerName,
-                            t.phoneNumber AS treasurerPhone
+                            t.phoneNumber AS treasurerPhone,
+                            ch.id AS churchID
                             FROM SupportCalls sc, Conferences con, Churches ch, Treasurers t, users u
                             WHERE ch.conferenceID = con.id AND sc.treasurerID = t.id AND t.churchID = ch.id AND sc.agentID = u.id;""")
     calls.sort(key=sortByID, reverse=True)
-    
-    return render_template("view-calls.html", calls=calls)
+
+
+    conferences = getObjectOfConferencesEachWithArrayOfItsChurches()
+    return render_template("view-calls.html", calls=calls, selection=selection, conferences=conferences)
 
 @app.route("/new-call", methods=["GET", "POST"])
-@login_required
+#@login_required TODO
 def newCall():
     if request.method == "POST" and not request.form.get("selectedTreasurer"):
         treasurer = request.form.get("treasurer")
@@ -239,21 +273,10 @@ def newCall():
             phone = request.form.get("phone")
             email = request.form.get("email")
             if name and (phone or email):
-                conference = request.form.get("conference")
-                church = request.form.get("church")
-                print(conference, church)
-                print(dbExecute("""SELECT c.id AS id
-                                        FROM Churches c, Conferences con
-                                        WHERE c.conferenceID = con.id 
-                                        AND c.name = ? AND con.name = ?;""", church, conference))
-
-                churchID = dbExecute("""SELECT c.id AS id
-                                        FROM Churches c, Conferences con
-                                        WHERE c.conferenceID = con.id 
-                                        AND c.name = ? AND con.name = ?;""", church, conference)[0]["id"]
+                churchID = getChurchIdFromChurchAndConferenceName(request.form.get("conference"), request.form.get("church"))
 
                 if not churchID:
-                    return apology("Bad Request - Church index not found", 400)
+                    return apology("Bad Request - Church not found", 400)
 
                 otherInfo = request.form.get("otherContactInfo")
                 dbExecute("INSERT INTO Treasurers (churchID, name, phoneNumber, email, otherContactInfo) VALUES (?, ?, ?, ?, ?)", churchID, name, phone, email, otherInfo)
@@ -285,25 +308,7 @@ def newCall():
                                     FROM Churches c, Conferences con, Treasurers t
                                     WHERE c.conferenceID = con.id AND t.churchID = c.id AND t.id = ?;""", request.form.get("selectedTreasurer"))[0]
         
-
-        churches = dbExecute("""SELECT c.*, 
-                                con.name AS conferenceName,
-                                con.id AS conferenceID
-                                FROM Churches c, Conferences con
-                                WHERE c.conferenceID = con.id;""")
-        # Initialize an empty dictionary to store arrays of objects for each conference ID
-        conferences = {}
-
-        # Iterate over the objects array
-        for church in churches:
-            conference_id = church['conferenceID']
-            
-            # If the conference ID is not already a key in the dictionary, add it with an empty array
-            if conference_id not in conferences:
-                conferences[conference_id] = []
-            
-            # Append the object to the array corresponding to its conference ID
-            conferences[conference_id].append(church)
+        conferences = getObjectOfConferencesEachWithArrayOfItsChurches()
 
         treasurersArray = dbExecute("""SELECT t.*, 
                                 con.name AS conferenceName,
@@ -327,7 +332,7 @@ def newCall():
         return render_template("new-call.html", conferences = conferences, treasurers=treasurers, treasurer=selectedTreasurer)
 
 @app.route("/save-new-ticket", methods=["POST"])
-@login_required
+#@login_required TODO
 def saveNewTicket():
     treasurerID = request.form.get("treasurer")
     treasurer = dbExecute("""SELECT *
@@ -337,9 +342,9 @@ def saveNewTicket():
     if not treasurer:
         return apology("Bad Request - Treasurer index not found", 400)
     
-    if "user_id" not in session:
-        return apology("Bad Request - Agent index not found (not logged in)", 400)
-    agentID = session["user_id"]
+    #if "user_id" not in session:
+        #return apology("Bad Request - Agent index not found (not logged in)", 400)
+    agentID = 1#session["user_id"] TODO
 
     startTime = request.form.get("startTime")
     endTime = request.form.get("endTime")
@@ -368,8 +373,25 @@ def saveNewTicket():
 
     #TODO link to ?churchID=x and show all tickets for that church including new one
     #return redirect("/churches")
-    print(treasurer)
     return redirect(f"/view-calls?churchID={treasurer['churchID']}")
+
+@app.route("/dashboard")
+def dashboard():
+    agentID = 1#session["user_id"] TODO
+    agent = dbExecute("SELECT * FROM Users WHERE id = ?;", agentID)[0]
+
+    month = validateMonthOrGetCurrent(request.args.get('month'))
+    if not month:
+        return redirect("/dashboard")
+        
+    calls = getSupportCallsWithOptionalFilters("agent", agentID, month=month)
+    sumTotalTime = getSupportCallsTotalTimeWithOptionalFilters("agent", agentID, month=month)
+    
+    return render_template("dashboard.html", agent=agent, calls=calls, month=month, sumTotalTime=sumTotalTime, currentYear=datetime.now().year)
+
+
+
+
 
 @app.route("/test")
 def test():

@@ -1,4 +1,6 @@
+from datetime import datetime
 import os
+import re
 import requests
 import urllib.parse
 
@@ -36,4 +38,18 @@ def admin_required(f):
 def sortByID(item):
         return item["id"]
 
-    
+def validateMonthOrGetCurrent(month):
+    if month:
+        # Define the pattern for MM-YYYY format
+        pattern = r"^(0[1-9]|1[0-2])-(\d{4})$"
+
+        # Check if the string matches the pattern
+        if not re.match(pattern, month):
+            return None
+    else:
+        # Get current date
+        current_date = datetime.now()
+
+        # Format date as MM-YYYY
+        month = current_date.strftime("%m-%Y")
+    return month

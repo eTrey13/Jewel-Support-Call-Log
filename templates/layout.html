@@ -60,7 +60,7 @@
                         {% if session.warehouse %}
                         <li class="nav-item"><a class="nav-link" href="/inventory">Inventory</a></li>
                         {% endif %}
-                        <li class="nav-item"><a class="nav-link" href="/profile">{{session.user_name}}</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/dashboard">{{session.user_name}}</a></li>
                         <li class="nav-item"><a class="nav-link" href="/logout">Log Out</a></li>
                         
                     </ul>
@@ -81,7 +81,7 @@
             </header>
         {% endif %}
 
-        <main class="container">
+        <main class="container" style="margin-top: 60px">
             {% block main %}{% endblock %}
         </main>
 

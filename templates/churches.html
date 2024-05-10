@@ -15,18 +15,18 @@
             <th>Name</th>
             <th>Jewel ID</th>
             <th>eAdventist ID</th>
-            <th>Conference ID</th>
             <th>Conference Name</th>
+            <th>Conference ID</th>
         </tr>
     </thead>
     <tbody>
     {% for church in churches %}
         <tr id="church#{{ church.id }}">
-            <td>{{ church.name }}</td>
+            <td><a href="/churches?churchID={{ church.id }}">{{ church.name }}</a></td>
             <td>{{ church.id }}</td>
             <td>{{ church.eAdventistID }}</td>
-            <td>{{ church.conferenceID }}</td>
             <td>{{ church.conferenceName }}</td>
+            <td>{{ church.conferenceID }}</td>
         </tr>
     {% endfor %}
     </tbody>

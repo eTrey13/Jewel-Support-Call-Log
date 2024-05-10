@@ -1,0 +1,74 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Churches
+{% endblock %}
+
+
+{% block main %}
+
+<h1>{{ church.churchName }}</h1>
+<h4>{{ church.conferenceName }}</h4>
+<br>
+
+<h3>Treasurers</h3>
+
+<table id="treasurersTable" class="table table-bordered table-striped table-responsive">
+    <thead>
+        <tr>
+            <th>Treasurer Name</th>
+            <th>Phone Number</th>
+            <th>Email</th>
+            <th>Needs Spanish Support</th>
+            <th>Other Contact Info</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for treasurer in treasurers %}
+        <tr id="treasurer#{{ treasurer.id }}">
+            <td>{{ treasurer.name }}</td>
+            <td>{{ treasurer.phoneNumber }}</td>
+            <td>{{ treasurer.email }}</td>
+            <td><input type="checkbox" {% if treasurer.needsSpanish %}checked{% endif %} disabled></td>
+            <td>{{ treasurer.otherContactInfo }}</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+<br>
+<br>
+<br>
+
+<h3>Support calls</h3>
+<a href="/view-calls?churchID={{ church.churchID }}">View all</a>
+<br>
+
+{% with selection=church, doPaging=True %}
+    {% include "calls-table.html" %}
+{% endwith %}
+
+{% endblock %}
+
+{% block script %}
+    <script>
+
+    let table = new DataTable('#treasurersTable', {
+        "order": [],
+        paging: false,
+    });
+
+    </script>
+{% endblock %}
+
+{% block style %}
+<style>
+#treasurersTable {
+    display: inline;
+    border: none;
+    
+}
+
+</style>
+
+{% endblock %}

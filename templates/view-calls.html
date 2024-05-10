@@ -9,48 +9,155 @@
 
 <h1>Support History</h1>
 
-<table id="myTable" class="table table-bordered table-striped table-responsive">
-    <thead>
-        <tr>
-            <th>Agent Name</th>
-            <th>Date</th>
-            <th>Phone Number</th>
-            <th>Treasurer</th>
-            <th>Church</th>
-            <th>Conference</th>
-            <th>Start Time</th>
-            <th>End Time</th>
-            <th>Total Time</th>
-            <th>Notes</th>
-        </tr>
-    </thead>
-    <tbody>
-    {% for call in calls %}
-        <tr id="call#{{ call.id }}">
-            <td>{{ call.agentName }}</td>
-            <td>{{ call.date }}</td>
-            <td>{{ call.treasurerPhone }}</td>
-            <td>{{ call.treasurerName }}</td>
-            <td>{{ call.churchName }}</td>
-            <td>{{ call.conferenceName }}</td>
-            <td>{{ call.startTime }}</td>
-            <td>{{ call.endTime }}</td>
-            <td>{{ call.totalTime }}</td>
-            <td>{{ call.notes }}</td>
-        </tr>
-    {% endfor %}
-    </tbody>
-</table>
+{% if selection.churchName %}
+<h3><a href="/churches?churchID={{ selection.churchID }}">{{ selection.churchName }}</a>, {{ selection.conferenceName }}</h3>
+<br>
+{% elif selection.conferenceName %}
+<h3>{{ selection.conferenceName }}</h3>
+<br>
+{% endif %}
 
+<form action="/view-calls" method="POST" onsubmit="return validateChurch_Conference(event)">
+
+    <div class="form-group">
+        <input style="width:300px;" class="form-control" type="text" name="conference" id="conference" placeholder="Type to select Conference" value="{{ selection.conferenceName }}">
+        <input style="width:300px;" class="form-control" type="text" name="church" id="church" placeholder="Type to select Church" value="{{ selection.churchName }}"">
+    </div>
+    <button class="btn btn-primary" type="submit" id="filterByConference">Filter By Conference</button>
+    <button class="btn btn-primary" type="submit" id="filterByChurch">Filter By Church</button>
+    <button class="btn btn-primary" type="submit" id="clearFilters">Clear Filters</button>
+</form>
+<br>
+
+{% with ignoreChurchAndConference=singleChurch %}
+    {% include "calls-table.html" %}
+{% endwith %}
 
 {% endblock %}
 
+{% block style %}
+<style>
+h3 a {
+    color: black; /* Set the color to black or any other color you prefer */
+}
+h3 a:hover {
+    color: black; /* Set the hover color to black */
+}
+</style>
+{% endblock %}
+
 {% block script %}
-    <script>
+<script>
+    const conferences_churches = {
+        //{% for key, conference in conferences.items() %}
+        "{{ conference[0].conferenceName }}": [
+            //{% for church in conference %}
+            "{{ church.name | safe }}",
+            //{% endfor %}
+        ],        
+        //{% endfor %}
+    };
 
-    let table = new DataTable('#myTable', {
-        "order": []
+    // Initialize autocomplete for conference input field
+    $("#conference").autocomplete({
+        minLength: 0,
+        delay: 0,
+        source: Object.keys(conferences_churches),
+        select: function(event, ui) {
+            // Call validateInputConference when an option is selected
+            validateInputConference(null, ui.item.value);
+        }
     });
+    $("#conference").on("click", function() {
+        $(this).autocomplete("search", $(this).val());
+    });
+  
+    // Initialize autocomplete for church input field
+    $("#church").autocomplete({
+        minLength: 0,
+        delay: 0,
+        source: function(request, response) {
+            const selectedConference = $("#conference").val();
+            const churches = conferences_churches[selectedConference] || [];
+            response(churches.filter(church => church.toLowerCase().includes(request.term.toLowerCase())));
+        },
+        select: function(event, ui) {
+            // Call validateInputChurch when an option is selected
+            validateInputChurch(null, ui.item.value);
+        }
+    });
+    $("#church").on("click", function() {
+        $(this).autocomplete("search", $(this).val());
+    });
+  
+    // Function to validate input and update border color
+    function validateInputConference(stuff, val) {
+        validOptions = Object.keys(conferences_churches);
+        const input = document.getElementById('conference');
+        const value = val || input.value;
 
-    </script>
+        validateInput(input, value, validOptions)
+        validateInputChurch(null, null, val)
+    }
+    function validateInputChurch(stuff, val, conf) {
+        const selectedConference = conf || document.getElementById('conference').value;
+        const validOptions = conferences_churches[selectedConference] || [];
+
+        const input = document.getElementById('church');
+        const value = val || input.value;
+
+        validateInput(input, value, validOptions)
+    }
+    function validateInput(inputBox, value, validOptions) {
+        // Check if input value is empty
+        if (value === '') {
+            inputBox.style.border = '3px solid';
+            inputBox.dataset.inDB = "empty";
+            return;
+        }
+
+        // Check if input value is in the valid options array
+        if (validOptions.includes(value)) {
+            inputBox.style.border = '3px solid mediumspringgreen';
+            inputBox.dataset.inDB = "valid";
+        } else {
+            inputBox.style.border = '3px solid red';
+            inputBox.dataset.inDB = "";
+        }
+    }
+
+    // Event listener for input value change
+    document.getElementById('conference').addEventListener('input', validateInputConference);
+    document.getElementById('church').addEventListener('input', validateInputChurch);
+
+
+    validateInputConference();
+
+    function validateChurch_Conference(event) {
+        let validConf = document.getElementById("conference").dataset.inDB;
+        let validChurch = document.getElementById("church").dataset.inDB;
+        
+        if (event.submitter === document.getElementById("clearFilters")) {
+            window.location.href = "/view-calls";
+            return false;
+        } else if (event.submitter === document.getElementById("filterByConference")) {
+            if (validConf != "valid") {
+                alert("Select a valid conference.");
+                return false;
+            }
+            document.getElementById("church").value = "";
+        } else if (event.submitter === document.getElementById("filterByChurch")) {
+            if (validConf != "valid" || validChurch != "valid") {
+                alert("Select a valid conference and church.");
+                return false;
+            }
+        }
+
+
+        // If validation passes, allow form submission
+        return true;
+    }
+    
+
+</script>
 {% endblock %}
