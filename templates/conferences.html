@@ -20,7 +20,7 @@
     <tbody>
     {% for conference in conferences %}
         <tr id="conference#{{ conference.id }}">
-            <td>{{ conference.name }}</td>
+            <td><a href="/conferences?conferenceID={{ conference.id }}" class="black-link">{{ conference.name }}</a></td>
             <td>{{ conference.id }}</td>
             <td>{{ conference.eAdventistID }}</td>
         </tr>
@@ -35,7 +35,8 @@
     <script>
 
     let table = new DataTable('#myTable', {
-        "order": []
+        "order": [],
+        paging: false,
     });
 
     </script>

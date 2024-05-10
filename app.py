@@ -196,10 +196,15 @@ def churches():
         church = church[0]
 
         treasurers = dbExecute("SELECT * FROM Treasurers WHERE churchID = ?", churchID)
+        
+        month = validateMonthOrGetCurrent(request.args.get('month'))
+        if not month:
+            return redirect("/dashboard")
 
-        calls = getSupportCallsWithOptionalFilters("church", churchID)
+        calls = getSupportCallsWithOptionalFilters("church", churchID, month=month)
+        sumTotalTime = getSupportCallsTotalTimeWithOptionalFilters("church", churchID, month=month)
 
-        return render_template("church-info.html", church=church, treasurers=treasurers, calls=calls)
+        return render_template("church-info.html", church=church, treasurers=treasurers, calls=calls, month=month, sumTotalTime=sumTotalTime, currentYear=datetime.now().year)
 
     #show all churches
     churches = dbExecute("""SELECT c.*, 
@@ -243,16 +248,7 @@ def viewCalls():
             return redirect("/view-calls")
         selection = conference[0]
     else:
-        calls = dbExecute("""SELECT sc.*, 
-                            con.name AS conferenceName,
-                            ch.name AS churchName,
-                            u.username AS agentName,
-                            t.name AS treasurerName,
-                            t.phoneNumber AS treasurerPhone,
-                            ch.id AS churchID
-                            FROM SupportCalls sc, Conferences con, Churches ch, Treasurers t, users u
-                            WHERE ch.conferenceID = con.id AND sc.treasurerID = t.id AND t.churchID = ch.id AND sc.agentID = u.id;""")
-    calls.sort(key=sortByID, reverse=True)
+        calls = getSupportCallsWithOptionalFilters("none", 0)
 
 
     conferences = getObjectOfConferencesEachWithArrayOfItsChurches()
@@ -294,10 +290,13 @@ def newCall():
                 return redirect("/new-call")
             treasurer = dbExecute("""SELECT t.*, 
                                 con.name AS conferenceName,
-                                c.name AS churchName
+                                c.name AS churchName,
+                                con.id AS conferenceID,
+                                c.id AS churchID
                                 FROM Churches c, Conferences con, Treasurers t
-                                WHERE c.conferenceID = con.id AND t.churchID = c.id AND t.id = ?;""", treasurerID)
-            return render_template("call-data.html", treasurer=treasurer[0])
+                                WHERE c.conferenceID = con.id AND t.churchID = c.id AND t.id = ?;""", treasurerID)[0]
+            calls = getSupportCallsWithOptionalFilters("church", treasurer["churchID"])
+            return render_template("call-data.html", treasurer=treasurer, calls=calls)
         
         #went back, load with same selection
         selectedTreasurer = None

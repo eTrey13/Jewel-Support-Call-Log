@@ -8,16 +8,25 @@
 {% block main %}
 
 
-<h1>Add New Call</h1>
+    <h1>Add New Call</h1>
 
-    <br>
 
-    <h3>{{ treasurer.conferenceName }} {{ treasurer.churchName }} {{ treasurer.name }}</h3>
-        
-    <form action="/new-call" method="POST">
-        <input type="text" name="selectedTreasurer" value="{{ treasurer.id }}" hidden>
-        <button class="btn btn-primary" type="submit">Go back</button>
-    </form>
+    <h3>{{ treasurer.churchName }}, {{ treasurer.conferenceName }}</h3>
+    
+        <div class="row justify-content-center">
+            <div class="col-auto">
+                <form action="/new-call" method="POST" class="form-inline">
+                    <div class="form-group">
+                        <h5>Treasurer: {{ treasurer.name }}</h5>
+                        <input type="text" name="selectedTreasurer" value="{{ treasurer.id }}" hidden>
+                    </div>
+                    <pre> </pre>
+                    <div class="form-group">
+                        <button class="btn btn-primary" type="submit">Go back</button>
+                    </div>
+                </form>
+            </div>
+        </div>
     
     <form action="/save-new-ticket" method="POST" onsubmit="return validateForm()">
         <input type="text" name="treasurer" value="{{ treasurer.id }}" hidden>
@@ -35,13 +44,14 @@
         <button class="btn btn-primary" type="submit">Add to Log</button>
     </form>
 
+<br>
+<br>
+
+<h3>Recent Support Calls</h3>
+
+{% with selection=treasurer, doPaging=True %}
+    {% include "calls-table.html" %}
+{% endwith %}
+
 <div class="whitespace"></div>
-{% endblock %}
-
-{% block script %}
-<script>
-
-
-</script>
-  
 {% endblock %}

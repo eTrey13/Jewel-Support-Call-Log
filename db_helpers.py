@@ -92,9 +92,9 @@ def getSupportCallsWithOptionalFilters(filterType, filterID, month=None):
     elif filterType == "agent":
         filterType = "u.id"
     else:
-        filterType = ""
+        filterType = "''"
 
-    if filterType == "":
+    if filterType == "''":
         filterID = ""
     if not month:
         month = ""
@@ -105,11 +105,12 @@ def getSupportCallsWithOptionalFilters(filterType, filterID, month=None):
                         u.username AS agentName,
                         t.name AS treasurerName,
                         t.phoneNumber AS treasurerPhone,
+                        con.id AS conferenceID,
                         ch.id AS churchID
                         FROM SupportCalls sc, Conferences con, Churches ch, Treasurers t, users u
                         WHERE ch.conferenceID = con.id AND sc.treasurerID = t.id AND t.churchID = ch.id AND sc.agentID = u.id 
                         AND {filterType} = ? AND ("{month}" = "" OR sc.date LIKE "%{month}%");""", filterID)
-    print(calls)
+    
     calls.sort(key=sortByID, reverse=True)
 
     return calls

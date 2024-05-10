@@ -72,9 +72,9 @@ input:is([type="date"]) {
 }
 
 
-table a {
+.black-link {
     color: black; /* Set the color to black or any other color you prefer */
 }
-table a:hover {
+.black-link:hover {
     color: black; /* Set the hover color to black */
 }

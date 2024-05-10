@@ -88,3 +88,10 @@
 3:00 shows months, hours, need ability to change month
 3:35 can change month
 3:55 conference page done (except no contact info in DB to show)
+4:00 uploaded to github and python anywhere
+4:20 church page also filtered by month
+4:40 conference names link to conference page, rest of church names also link to church page
+4:45 added table with support calls to `add call data`
+5:00 nicer looking `add call data` (still needs work)
+
+5:25 break

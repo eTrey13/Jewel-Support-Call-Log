@@ -34,10 +34,10 @@
             <td>{{ call.totalTime }}</td>
             <td>{{ call.notes }}</td>
             {% if not selection.churchName %}
-            <td><a href="/churches?churchID={{ call.churchID }}">{{ call.churchName }}</a></td>
+            <td><a href="/churches?churchID={{ call.churchID }}" class="black-link">{{ call.churchName }}</a></td>
             {% endif %}
             {% if not selection.conferenceName %}
-            <td>{{ call.conferenceName }}</td>
+            <td><a href="/conferences?conferenceID={{ call.conferenceID }}" class="black-link">{{ call.conferenceName }}</a></td>
             {% endif %}
             <td>{{ call.startTime }}</td>
             <td>{{ call.endTime }}</td>

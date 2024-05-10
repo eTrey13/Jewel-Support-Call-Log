@@ -22,10 +22,10 @@
     <tbody>
     {% for church in churches %}
         <tr id="church#{{ church.id }}">
-            <td><a href="/churches?churchID={{ church.id }}">{{ church.name }}</a></td>
+            <td><a href="/churches?churchID={{ church.id }}" class="black-link">{{ church.name }}</a></td>
             <td>{{ church.id }}</td>
             <td>{{ church.eAdventistID }}</td>
-            <td>{{ church.conferenceName }}</td>
+            <td><a href="/conferences?conferenceID={{ church.conferenceID }}" class="black-link">{{ church.conferenceName }}</a></td>
             <td>{{ church.conferenceID }}</td>
         </tr>
     {% endfor %}

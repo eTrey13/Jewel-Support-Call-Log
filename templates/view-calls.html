@@ -10,10 +10,10 @@
 <h1>Support History</h1>
 
 {% if selection.churchName %}
-<h3><a href="/churches?churchID={{ selection.churchID }}">{{ selection.churchName }}</a>, {{ selection.conferenceName }}</h3>
+<h3><a href="/churches?churchID={{ selection.churchID }}" class="black-link">{{ selection.churchName }}</a>, <a href="/conferences?conferenceID={{ selection.conferenceID }}" class="black-link">{{ selection.conferenceName }}</a></h3>
 <br>
 {% elif selection.conferenceName %}
-<h3>{{ selection.conferenceName }}</h3>
+<h3><a href="/conferences?conferenceID={{ selection.conferenceID }}" class="black-link">{{ selection.conferenceName }}</a></h3>
 <br>
 {% endif %}
 
@@ -33,17 +33,6 @@
     {% include "calls-table.html" %}
 {% endwith %}
 
-{% endblock %}
-
-{% block style %}
-<style>
-h3 a {
-    color: black; /* Set the color to black or any other color you prefer */
-}
-h3 a:hover {
-    color: black; /* Set the hover color to black */
-}
-</style>
 {% endblock %}
 
 {% block script %}
