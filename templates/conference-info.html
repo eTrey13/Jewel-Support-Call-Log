@@ -1,35 +1,28 @@
-{% set months = ["", "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"] %}
-
 {% extends "layout.html" %}
 
 {% block title %}
-    Churches
+    Conferences - {{ conference.conferenceName }}
 {% endblock %}
 
 
 {% block main %}
 
 <h1><a href="/conferences?conferenceID={{ conference.conferenceID }}" class="black-link">{{ conference.conferenceName }}</a></h1>
-<br>
 
 <h3>Contact Information</h3>
+<a href="/churches?churchID={{ conferenceOffice }}">Conference Office</a>
 
 
 
 <br>
 <br>
 <br>
-
-{% set month_parts = month.split('-') %}
-<h3>Support calls - {{ months[month_parts[0] | int] }} {{ month_parts[1] }} - {{ sumTotalTime // 60 }}:{{ '{:02d}'.format(sumTotalTime % 60) }} hours</h3>
-
-<a href="/view-calls?conferenceID={{ conference.conferenceID }}">View all</a>
+<br>
+<br>
 
 {% with mainLink = "/conferences?conferenceID=" + (conference.conferenceID|string), secondArgument = True %}
-    {% include "month-selector-form.html" %}
+    {% include "includes/month-selector-form.html" %}
 {% endwith %}
-
-<br>
 
 {% with selection=conference, doPaging=True %}
     {% include "calls-table.html" %}

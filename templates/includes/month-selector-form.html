@@ -1,0 +1,77 @@
+{% set months = ["", "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"] %}
+
+{% set currentYear = "year" | currentDate() %}
+{% set currentMonth = "month" | currentDate() %}
+
+
+{% if month %}
+    {% set month_partsTo = month["to"].split('-') %}
+    {% set month_partsFrom = month["from"].split('-') %}
+{% else %}
+    {% set month_partsTo = [currentMonth, currentYear] %}
+    {% set month_partsFrom = [currentMonth, currentYear] %}
+{% endif %}
+
+ <h3>Support calls, 
+{% if month %}
+    {% if month['to'] != month['from'] %}
+    {{ months[month_partsFrom[0] | int] }} {{ month_partsFrom[1] }} - 
+    {% endif %}
+    {{ months[month_partsTo[0] | int] }} {{ month_partsTo[1] }},
+{% else %}
+All,
+{% endif %}
+{{ sumTotalTime // 60 }}:{{ '{:02d}'.format(sumTotalTime % 60) }} hours</h3>
+
+<br>
+
+<form>
+    <div class="form-group">
+        <button class="btn btn-primary month-selector-button" onclick="window.location.href='{{ mainLink }}';return false;">This Month</button>
+        <button class="btn btn-primary month-selector-button" onclick="window.location.href=`{{ mainLink }}{{ '&' if secondArgument else '?' }}from={{ '%02d'|format(12 if currentMonth == 1 else currentMonth-1) }}-{{ currentYear-1 if currentMonth == 1 else currentYear }}&to={{ '%02d'|format(12 if currentMonth == 1 else currentMonth-1) }}-{{ currentYear-1 if currentMonth == 1 else currentYear }}`;return false;">Last Month</button>
+        <button class="btn btn-primary month-selector-button" onclick="window.location.href=`{{ mainLink }}{{ '&' if secondArgument else '?' }}from={{ '%02d'|format(currentMonth+10 if currentMonth <= 2 else currentMonth-2) }}-{{ currentYear-1 if currentMonth <= 2 else currentYear }}&to={{ '%02d'|format(currentMonth) }}-{{ currentYear }}`;return false;">Lastest 3 Months</button>
+        <button class="btn btn-primary month-selector-button" onclick="window.location.href=`{{ mainLink }}{{ '&' if secondArgument else '?' }}from=01-{{ currentYear }}&to=12-{{ currentYear }}`;return false;">This Year</button>
+        <button class="btn btn-primary month-selector-button" onclick="window.location.href=`{{ mainLink }}{{ '&' if secondArgument else '?' }}from=01-{{ currentYear - 1 }}&to=12-{{ currentYear - 1 }}`;return false;">Last Year</button>
+        <button class="btn btn-primary month-selector-button" onclick="window.location.href=`{{ mainLink }}{{ '&' if secondArgument else '?' }}from=all&to=all`;return false;">All Dates</button>
+    
+
+    </div>
+    <div class="form-group">
+        <label>From:</label>
+        <select id="monthFrom" name="monthFrom">
+            {% for i in range(1, months|length) %}
+                <option value="{{ '{:02d}'.format(i) }}" {% if i == month_partsFrom[0] | int %}selected{% endif %}>{{ months[i]}}</option>
+            {% endfor %}
+        </select>
+        <select id="yearFrom" name="yearFrom">
+            {% if month_partsFrom[1]|int < 2023 %}
+                <option value="{{ month_partsFrom[1] }}" selected>{{ month_partsFrom[1] }}</option>
+            {% endif %}
+            {% for year in range(2023, currentYear + 1) %}
+                <option value="{{ year }}" {% if year == month_partsFrom[1]|int %}selected{% endif %}>{{ year }}</option>
+            {% endfor %}
+            {% if month_partsFrom[1]|int > currentYear %}
+                <option value="{{ month_partsFrom[1] }}" selected>{{ month_partsFrom[1] }}</option>
+            {% endif %}
+        </select>
+
+        <label>Through:</label>
+        <select id="monthTo" name="monthTo">
+            {% for i in range(1, months|length) %}
+                <option value="{{ '{:02d}'.format(i) }}" {% if i == month_partsTo[0] | int %}selected{% endif %}>{{ months[i]}}</option>
+            {% endfor %}
+        </select>
+        <select id="yearTo" name="yearTo">
+            {% if month_partsTo[1]|int < 2023 %}
+                <option value="{{ month_partsTo[1] }}" selected>{{ month_partsTo[1] }}</option>
+            {% endif %}
+            {% for year in range(2023, currentYear + 1) %}
+                <option value="{{ year }}" {% if year == month_partsTo[1]|int %}selected{% endif %}>{{ year }}</option>
+            {% endfor %}
+            {% if month_partsTo[1]|int > currentYear %}
+                <option value="{{ month_partsTo[1] }}" selected>{{ month_partsTo[1] }}</option>
+            {% endif %}
+        </select>
+        <button class="btn btn-primary month-selector-button" onclick="window.location.href=`{{ mainLink }}{{ '&' if secondArgument else '?' }}from=${monthFrom.value}-${yearFrom.value}&to=${monthTo.value}-${yearTo.value}`;return false;">Go</button>
+    </div>
+</form>

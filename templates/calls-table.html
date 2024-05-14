@@ -48,6 +48,45 @@
 
 <script>
 
+const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];    
+jQuery.extend( jQuery.fn.dataTableExt.oSort, {
+    "custom-sort-pre": function (a) {
+        // Define the preprocessing function to convert the data as needed
+        aSplit = a.split(' ');
+        obj = {
+            day: aSplit[0],
+            month: months.indexOf(aSplit[1].split(",")[0]),
+            year: aSplit[2]
+        }
+        
+        return obj;
+    },
+    "custom-sort-asc": function (a, b) {
+        // Compare years first
+        if (a.year !== b.year) {
+            return a.year - b.year;
+        }
+        // Compare months if years are equal
+        if (a.month !== b.month) {
+            return a.month - b.month;
+        }
+        // Compare days if months are equal
+        return a.day - b.day;
+    },
+    "custom-sort-desc": function (b, a) {
+        // Compare years first
+        if (a.year !== b.year) {
+            return a.year - b.year;
+        }
+        // Compare months if years are equal
+        if (a.month !== b.month) {
+            return a.month - b.month;
+        }
+        // Compare days if months are equal
+        return a.day - b.day;
+    }
+});
+
     let table = new DataTable('#callsTable', {
         order: [],
         //{% if not doPaging %}
@@ -55,6 +94,7 @@
         //{% endif %}
         //columns: [null, null, null, null, null, { width: '50em' }, null, null],
         columnDefs: [
+            { "type": "custom-sort", "targets": 1 },
             //{ "width": "100px", "targets": 0 },
             { width: "50em", targets: 5 },
             //{ width: "50px", targets: 4 },

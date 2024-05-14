@@ -1,9 +1,7 @@
-{% set months = ["", "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"] %}
-
 {% extends "layout.html" %}
 
 {% block title %}
-    Churches
+    Churches - {{ church.churchName }}
 {% endblock %}
 
 
@@ -42,13 +40,9 @@
 <br>
 <br>
 
-{% set month_parts = month.split('-') %}
-<h3>Support calls - {{ months[month_parts[0] | int] }} {{ month_parts[1] }} - {{ sumTotalTime // 60 }}:{{ '{:02d}'.format(sumTotalTime % 60) }} hours</h3>
-
-<a href="/view-calls?churchID={{ church.churchID }}">View all</a>
 
 {% with mainLink = "/churches?churchID=" + (church.churchID|string), secondArgument = True %}
-    {% include "month-selector-form.html" %}
+    {% include "includes/month-selector-form.html" %}
 {% endwith %}
 
 <br>

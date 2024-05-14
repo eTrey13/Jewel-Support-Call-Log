@@ -71,10 +71,32 @@ input:is([type="date"]) {
     display: inline-flex;
 }
 
-
+/*make links black with a class*/
 .black-link {
-    color: black; /* Set the color to black or any other color you prefer */
+    color: black;
 }
 .black-link:hover {
-    color: black; /* Set the hover color to black */
+    color: black;
 }
+
+/*make my autocomplete show limited options*/
+.ui-autocomplete {
+    max-height: 150px;
+    overflow-y: auto;
+    /* prevent horizontal scrollbar */
+    overflow-x: hidden;
+  }
+  /* IE 6 doesn't support max-height
+   * we use height instead, but this forces the menu to always be this tall
+   */
+  * html .ui-autocomplete {
+    height: 100px;
+  }
+
+  /*buttons for month selector*/
+  .month-selector-button {
+    padding-top: 0rem !important;
+    padding-bottom: 0rem !important;
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+  }

@@ -38,18 +38,19 @@ def admin_required(f):
 def sortByID(item):
         return item["id"]
 
-def validateMonthOrGetCurrent(month):
-    if month:
-        # Define the pattern for MM-YYYY format
-        pattern = r"^(0[1-9]|1[0-2])-(\d{4})$"
-
-        # Check if the string matches the pattern
-        if not re.match(pattern, month):
-            return None
-    else:
-        # Get current date
-        current_date = datetime.now()
-
-        # Format date as MM-YYYY
-        month = current_date.strftime("%m-%Y")
-    return month
+def validateRangeOrGetCurrent(from_, to):
+    if not from_ and not to:
+         return {
+              "from":  datetime.now().strftime("%m-%Y"),
+              "to":  datetime.now().strftime("%m-%Y"),
+         }
+    pattern = r"^(0[1-9]|1[0-2])-(\d{4})$"
+    if not re.match(pattern, from_) or not re.match(pattern, to):
+        if from_ == "all" and to == "all":
+            return "all"
+        return None
+    return {
+        "from":  from_,
+        "to":  to,
+    }
+    

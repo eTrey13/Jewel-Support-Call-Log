@@ -27,24 +27,26 @@
                 </form>
             </div>
         </div>
-    
+    <br>
     <form action="/save-new-ticket" method="POST" onsubmit="return validateForm()">
         <input type="text" name="treasurer" value="{{ treasurer.id }}" hidden>
 
-        <label for="meeting-time">Start Time:</label>
-        <input type="time" id="startTime" name="startTime" required>
-        <label for="meeting-time">End Time:</label>
-        <input type="time" id="endTime" name="endTime" required>
-        
-        <label for="message">Call Notes:</label>
-        <textarea id="message" name="message" rows="8" cols="50"></textarea>
-        
+        <div class="form-group">
+            <textarea class="form-control" placeholder="Call notes" id="message" name="message" rows="8" cols="50"></textarea>
+        </div>
 
-        
-        <button class="btn btn-primary" type="submit">Add to Log</button>
+        <div class="form-group">
+            <label class="form-label" for="meeting-time">Start Time:</label>
+            <input class="form-control" type="time" id="startTime" name="startTime" required style="vertical-align: middle">
+            <label class="form-label" for="meeting-time">End Time:</label>
+            <input class="form-control" type="time" id="endTime" name="endTime" required style="vertical-align: middle">
+            <button class="btn btn-primary" onclick="setCurrentTime(endTime)" type="button">Set</button>
+            <button class="btn btn-primary" type="submit">Add to Log</button>
+        </div>setCurrentTime
+
     </form>
 
-<br>
+    
 <br>
 
 <h3>Recent Support Calls</h3>
@@ -54,4 +56,19 @@
 {% endwith %}
 
 <div class="whitespace"></div>
+{% endblock %}
+
+{% block script %}
+<script>
+    function setCurrentTime(input) {
+        // Get the current time
+        let now = new Date();
+        let hours = now.getHours().toString().padStart(2, '0'); // Add leading zero if needed
+        let minutes = now.getMinutes().toString().padStart(2, '0'); // Add leading zero if needed
+
+        // Set the time input value to the current time
+        input.value = hours + ':' + minutes;
+    }
+    setCurrentTime(document.getElementById("startTime"))
+</script>
 {% endblock %}

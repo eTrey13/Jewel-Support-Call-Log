@@ -1,6 +1,3 @@
-{% set months = ["", "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"] %}
-
-
 {% extends "layout.html" %}
 
 {% block title %}
@@ -13,12 +10,8 @@
 <h1>{{ agent.username }}</h1>
 <br>
 
-{% set month_parts = month.split('-') %}
-
-<h3>Support calls - {{ months[month_parts[0] | int] }} {{ month_parts[1] }} - {{ sumTotalTime // 60 }}:{{ '{:02d}'.format(sumTotalTime % 60) }} hours</h3>
-
 {% with mainLink = "dashboard", secondArgument = False %}
-    {% include "month-selector-form.html" %}
+    {% include "includes/month-selector-form.html" %}
 {% endwith %}
 
 {% with selection={}, doPaging=True %}

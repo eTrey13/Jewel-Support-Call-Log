@@ -7,7 +7,17 @@
 
 {% block main %}
 
-<h1>Churches</h1>
+<h1>Churches{% if prepopulated %} - {{ prepopulated.conferenceName }}{% endif %}</h1>
+
+
+
+<form action="/churches" method="POST" onsubmit="return validateConference(event)">
+    
+    {% include "includes/autocomplete selector/autocomplete.html" %}
+    
+    <button class="btn btn-primary" type="submit" id="filterByConference">Filter</button>
+    <button class="btn btn-primary" type="submit" id="clearFilters">Clear Filters</button>
+</form>
 
 <table id="myTable" class="table table-bordered table-striped table-responsive">
     <thead>
@@ -38,9 +48,30 @@
 {% block script %}
     <script>
 
+
     let table = new DataTable('#myTable', {
         "order": []
     });
+    </script>
+    <script>
+    //{% include "includes/autocomplete selector/autocomplete.js" %}
+
+    function validateConference(event) {
+        let validConf = document.getElementById("conference").dataset.inDB;
+        
+        if (event.submitter === document.getElementById("clearFilters")) {
+            window.location.href = "/churches";
+            return false;
+        } else if (event.submitter === document.getElementById("filterByConference")) {
+            if (validConf != "valid" && validConf != "unsupported") {
+                alert("Select a valid conference.");
+                return false;
+            }
+        }
+
+        // If validation passes, allow form submission
+        return true;
+    }
 
     </script>
 {% endblock %}

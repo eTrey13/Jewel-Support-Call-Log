@@ -166,22 +166,29 @@ def conferences():
         conference = conference[0]
 
 
-        month = validateMonthOrGetCurrent(request.args.get('month'))
+        month = validateRangeOrGetCurrent(request.args.get('from'), request.args.get('to'))
         if not month:
-            return redirect("/dashboard")
+            return redirect(f"/conferences?conferenceID={conferenceID}")
+        if month == "all":
+            month = None
         
         calls = getSupportCallsWithOptionalFilters("conference", conferenceID, month=month)
         sumTotalTime = getSupportCallsTotalTimeWithOptionalFilters("conference", conferenceID, month=month)
-    
+        conferenceOffice = dbExecute("SELECT id FROM Churches WHERE conferenceID = ? AND name = 'Conference Office'", conferenceID)[0]['id']
 
-        return render_template("conference-info.html", conference=conference, calls=calls, month=month, sumTotalTime=sumTotalTime, currentYear=datetime.now().year)
+        return render_template("conference-info.html", conference=conference, calls=calls, month=month, sumTotalTime=sumTotalTime, conferenceOffice=conferenceOffice)
 
     
     conferences = dbExecute("SELECT * FROM Conferences")
     return render_template("conferences.html", conferences=conferences)
 
-@app.route("/churches")
+@app.route("/churches", methods=["GET", "POST"])
 def churches():
+    if request.method == "POST":
+        conferenceID = getConferenceIdFromConferenceName(request.form.get("conference"))
+        if conferenceID:
+            return redirect(f"/churches?conferenceID={conferenceID}")
+
     #show info of one church
     churchID = request.args.get('churchID')
     if churchID:
@@ -197,21 +204,42 @@ def churches():
 
         treasurers = dbExecute("SELECT * FROM Treasurers WHERE churchID = ?", churchID)
         
-        month = validateMonthOrGetCurrent(request.args.get('month'))
+        month = validateRangeOrGetCurrent(request.args.get('from'), request.args.get('to'))
         if not month:
-            return redirect("/dashboard")
-
+            return redirect(f"/churches?churchID={churchID}")
+        if month == "all":
+            month = None
+        
         calls = getSupportCallsWithOptionalFilters("church", churchID, month=month)
         sumTotalTime = getSupportCallsTotalTimeWithOptionalFilters("church", churchID, month=month)
 
-        return render_template("church-info.html", church=church, treasurers=treasurers, calls=calls, month=month, sumTotalTime=sumTotalTime, currentYear=datetime.now().year)
+        return render_template("church-info.html", church=church, treasurers=treasurers, calls=calls, month=month, sumTotalTime=sumTotalTime)
 
     #show all churches
-    churches = dbExecute("""SELECT c.*, 
-                            con.name AS conferenceName
-                            FROM Churches c, Conferences con
-                            WHERE c.conferenceID = con.id;""")
-    return render_template("churches.html", churches=churches)
+    conferenceID = request.args.get('conferenceID')
+    churches = []
+    conference = None
+    if conferenceID:
+        conference = dbExecute("""SELECT name AS conferenceName,
+                                id AS conferenceID
+                                FROM Conferences
+                                WHERE id = ?;""", conferenceID)
+        if not conference:
+            return redirect("/churches")
+        conference = conference[0]
+        churches = dbExecute("""SELECT c.*, 
+                                con.name AS conferenceName
+                                FROM Churches c, Conferences con
+                                WHERE c.conferenceID = con.id AND con.id = ?;""", conferenceID)
+    else:
+        churches = dbExecute("""SELECT c.*, 
+                                con.name AS conferenceName
+                                FROM Churches c, Conferences con
+                                WHERE c.conferenceID = con.id;""")
+    conferences = getObjectOfConferencesEachWithArrayOfItsChurches()
+    unsupportedConferences = dbExecute("SELECT * FROM Conferences WHERE supported = 0;")
+
+    return render_template("churches.html", churches=churches, conferences=conferences, prepopulated=conference, unsupportedConferences=unsupportedConferences)
 
 @app.route("/view-calls", methods=["GET", "POST"])
 def viewCalls():
@@ -252,7 +280,8 @@ def viewCalls():
 
 
     conferences = getObjectOfConferencesEachWithArrayOfItsChurches()
-    return render_template("view-calls.html", calls=calls, selection=selection, conferences=conferences)
+    unsupportedConferences = dbExecute("SELECT * FROM Conferences WHERE supported = 0;")
+    return render_template("view-calls.html", calls=calls, selection=selection, conferences=conferences, unsupportedConferences=unsupportedConferences)
 
 @app.route("/new-call", methods=["GET", "POST"])
 #@login_required TODO
@@ -305,7 +334,8 @@ def newCall():
                                     con.name AS conferenceName,
                                     c.name AS churchName
                                     FROM Churches c, Conferences con, Treasurers t
-                                    WHERE c.conferenceID = con.id AND t.churchID = c.id AND t.id = ?;""", request.form.get("selectedTreasurer"))[0]
+                                    WHERE c.conferenceID = con.id AND t.churchID = c.id AND t.id = ?;""", request.form.get("selectedTreasurer"))
+            selectedTreasurer = selectedTreasurer[0] if selectedTreasurer else None
         
         conferences = getObjectOfConferencesEachWithArrayOfItsChurches()
 
@@ -328,7 +358,9 @@ def newCall():
             # Append the object to the array corresponding to its conference ID
             treasurers[conf_church_name].append(treasurer)
         
-        return render_template("new-call.html", conferences = conferences, treasurers=treasurers, treasurer=selectedTreasurer)
+        unsupportedConferences = dbExecute("SELECT * FROM Conferences WHERE supported = 0;")
+
+        return render_template("new-call.html", conferences = conferences, treasurers=treasurers, treasurer=selectedTreasurer, unsupportedConferences=unsupportedConferences)
 
 @app.route("/save-new-ticket", methods=["POST"])
 #@login_required TODO
@@ -379,14 +411,16 @@ def dashboard():
     agentID = 1#session["user_id"] TODO
     agent = dbExecute("SELECT * FROM Users WHERE id = ?;", agentID)[0]
 
-    month = validateMonthOrGetCurrent(request.args.get('month'))
+    month = validateRangeOrGetCurrent(request.args.get('from'), request.args.get('to'))
     if not month:
         return redirect("/dashboard")
+    if month == "all":
+            month = None
         
     calls = getSupportCallsWithOptionalFilters("agent", agentID, month=month)
     sumTotalTime = getSupportCallsTotalTimeWithOptionalFilters("agent", agentID, month=month)
     
-    return render_template("dashboard.html", agent=agent, calls=calls, month=month, sumTotalTime=sumTotalTime, currentYear=datetime.now().year)
+    return render_template("dashboard.html", agent=agent, calls=calls, month=month, sumTotalTime=sumTotalTime)
 
 
 
@@ -421,6 +455,18 @@ def updateChurches():
 
 
     return redirect("/")
+
+
+# filters
+@app.template_filter('currentDate')
+def currentDate(format_string=None):
+    if format_string == "year":
+        return datetime.now().year
+    elif format_string == "month":
+        return datetime.now().month
+    else:
+        return None
+    
 
 
 def errorhandler(e):

@@ -95,3 +95,40 @@
 5:00 nicer looking `add call data` (still needs work)
 
 5:25 break
+6:10 upload to website, talk to mom and get more TODOs
+
+3:15 hours
+
+
+8:55
+9:35 shows unsupported as yellow
+
+0:40 hours
+
+2:05
+2:45 nicer styling for add call data
+2:50 load with start time
+
+3:50
+4:05 button for end time
+4:35 custom sorting for date in calls table
+5:05 disabled pressing enter
+5:40 made conference/church/treasurer selector code its own files
+6:05 selector for churches page to select what conference to look at, brought yellow there and to view calls
+6:10 churches alphabetized in selector
+7:15 working on month selector, have the backend working on one of the pages? Mostly, at least
+
+8:05 break
+8:25 added more DB data
+9:10 month selector working for conference page. Need to add a few default selections, make a bit more compact in includes (less duplicate code), add to other pages (church, dashboard), fix redirect if not month
+
+5:15 hours
+
+
+12:20
+12:35 all default selections working
+1:05 working in all pages, added the header with the range/hours to the includes, made a jinja filter to get the current month/year
+1:10 fixed link if month link breaks
+
+1:15 break
+1:25 conference page links to conference office page

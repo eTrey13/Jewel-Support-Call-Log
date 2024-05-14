@@ -96,9 +96,11 @@ def getSupportCallsWithOptionalFilters(filterType, filterID, month=None):
 
     if filterType == "''":
         filterID = ""
-    if not month:
-        month = ""
-
+        
+    monthFilterString = ""
+    if month:
+        monthFilterString = f"AND substr(sc.date, 7, 4) || substr(sc.date, 3, 4) || substr(sc.date, 1, 2) BETWEEN '{month['from'].split('-')[1]}-{month['from'].split('-')[0]}-01' AND date('{month['to'].split('-')[1]}-{month['to'].split('-')[0]}-01', 'start of month', '+1 month', '-1 day')"
+    
     calls = dbExecute(f"""SELECT sc.*, 
                         con.name AS conferenceName,
                         ch.name AS churchName,
@@ -109,7 +111,8 @@ def getSupportCallsWithOptionalFilters(filterType, filterID, month=None):
                         ch.id AS churchID
                         FROM SupportCalls sc, Conferences con, Churches ch, Treasurers t, users u
                         WHERE ch.conferenceID = con.id AND sc.treasurerID = t.id AND t.churchID = ch.id AND sc.agentID = u.id 
-                        AND {filterType} = ? AND ("{month}" = "" OR sc.date LIKE "%{month}%");""", filterID)
+                        AND {filterType} = ?
+                        {monthFilterString};""", filterID)
     
     calls.sort(key=sortByID, reverse=True)
 
@@ -133,12 +136,18 @@ def getSupportCallsTotalTimeWithOptionalFilters(filterType, filterID, month=None
 
     if filterType == "":
         filterID = ""
+
+    monthFilterString = ""
+    if month:
+        monthFilterString = f"AND substr(sc.date, 7, 4) || substr(sc.date, 3, 4) || substr(sc.date, 1, 2) BETWEEN '{month['from'].split('-')[1]}-{month['from'].split('-')[0]}-01' AND date('{month['to'].split('-')[1]}-{month['to'].split('-')[0]}-01', 'start of month', '+1 month', '-1 day')"
+    
   
     sumTotalTime = dbExecute(f"""SELECT 
                         SUM(sc.totalTime) AS sumTotalTime
                         FROM SupportCalls sc, Conferences con, Churches ch, Treasurers t, users u
                         WHERE ch.conferenceID = con.id AND sc.treasurerID = t.id AND t.churchID = ch.id AND sc.agentID = u.id 
-                        AND {filterType} = ? AND ("{month}" = "" OR sc.date LIKE "%{month}%");""", filterID)[0]["sumTotalTime"]
+                        AND {filterType} = ? 
+                        {monthFilterString};""", filterID)[0]["sumTotalTime"]
     if not sumTotalTime:
         sumTotalTime = 0
     return sumTotalTime

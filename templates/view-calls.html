@@ -17,12 +17,11 @@
 <br>
 {% endif %}
 
-<form action="/view-calls" method="POST" onsubmit="return validateChurch_Conference(event)">
+<form id="selectorForm" action="/view-calls" method="POST" onsubmit="return validateChurch_Conference(event)">
 
-    <div class="form-group">
-        <input style="width:300px;" class="form-control" type="text" name="conference" id="conference" placeholder="Type to select Conference" value="{{ selection.conferenceName }}">
-        <input style="width:300px;" class="form-control" type="text" name="church" id="church" placeholder="Type to select Church" value="{{ selection.churchName }}"">
-    </div>
+    {% with selectChurch = True, prepopulated=selection %}
+        {% include "includes/autocomplete selector/autocomplete.html" %}
+    {% endwith %}
     <button class="btn btn-primary" type="submit" id="filterByConference">Filter By Conference</button>
     <button class="btn btn-primary" type="submit" id="filterByChurch">Filter By Church</button>
     <button class="btn btn-primary" type="submit" id="clearFilters">Clear Filters</button>
@@ -37,90 +36,12 @@
 
 {% block script %}
 <script>
-    const conferences_churches = {
-        //{% for key, conference in conferences.items() %}
-        "{{ conference[0].conferenceName }}": [
-            //{% for church in conference %}
-            "{{ church.name | safe }}",
-            //{% endfor %}
-        ],        
-        //{% endfor %}
-    };
 
-    // Initialize autocomplete for conference input field
-    $("#conference").autocomplete({
-        minLength: 0,
-        delay: 0,
-        source: Object.keys(conferences_churches),
-        select: function(event, ui) {
-            // Call validateInputConference when an option is selected
-            validateInputConference(null, ui.item.value);
-        }
-    });
-    $("#conference").on("click", function() {
-        $(this).autocomplete("search", $(this).val());
-    });
-  
-    // Initialize autocomplete for church input field
-    $("#church").autocomplete({
-        minLength: 0,
-        delay: 0,
-        source: function(request, response) {
-            const selectedConference = $("#conference").val();
-            const churches = conferences_churches[selectedConference] || [];
-            response(churches.filter(church => church.toLowerCase().includes(request.term.toLowerCase())));
-        },
-        select: function(event, ui) {
-            // Call validateInputChurch when an option is selected
-            validateInputChurch(null, ui.item.value);
-        }
-    });
-    $("#church").on("click", function() {
-        $(this).autocomplete("search", $(this).val());
-    });
-  
-    // Function to validate input and update border color
-    function validateInputConference(stuff, val) {
-        validOptions = Object.keys(conferences_churches);
-        const input = document.getElementById('conference');
-        const value = val || input.value;
-
-        validateInput(input, value, validOptions)
-        validateInputChurch(null, null, val)
-    }
-    function validateInputChurch(stuff, val, conf) {
-        const selectedConference = conf || document.getElementById('conference').value;
-        const validOptions = conferences_churches[selectedConference] || [];
-
-        const input = document.getElementById('church');
-        const value = val || input.value;
-
-        validateInput(input, value, validOptions)
-    }
-    function validateInput(inputBox, value, validOptions) {
-        // Check if input value is empty
-        if (value === '') {
-            inputBox.style.border = '3px solid';
-            inputBox.dataset.inDB = "empty";
-            return;
-        }
-
-        // Check if input value is in the valid options array
-        if (validOptions.includes(value)) {
-            inputBox.style.border = '3px solid mediumspringgreen';
-            inputBox.dataset.inDB = "valid";
-        } else {
-            inputBox.style.border = '3px solid red';
-            inputBox.dataset.inDB = "";
-        }
-    }
-
-    // Event listener for input value change
-    document.getElementById('conference').addEventListener('input', validateInputConference);
-    document.getElementById('church').addEventListener('input', validateInputChurch);
+    //{% with selectChurch = True %}
+        //{% include "includes/autocomplete selector/autocomplete.js" %}
+    //{% endwith %}
 
 
-    validateInputConference();
 
     function validateChurch_Conference(event) {
         let validConf = document.getElementById("conference").dataset.inDB;
@@ -130,23 +51,24 @@
             window.location.href = "/view-calls";
             return false;
         } else if (event.submitter === document.getElementById("filterByConference")) {
-            if (validConf != "valid") {
+            if (validConf != "valid" && validConf != "unsupported") {
                 alert("Select a valid conference.");
                 return false;
             }
             document.getElementById("church").value = "";
         } else if (event.submitter === document.getElementById("filterByChurch")) {
-            if (validConf != "valid" || validChurch != "valid") {
+            if ((validConf != "valid" && validConf != "unsupported") || (validChurch != "valid" && validChurch != "unsupported")) {
                 alert("Select a valid conference and church.");
                 return false;
             }
         }
 
-
         // If validation passes, allow form submission
         return true;
     }
     
+    document.getElementById('selectorForm').addEventListener('keydown', (event) => event.key === 'Enter' && event.preventDefault());
+
 
 </script>
 {% endblock %}

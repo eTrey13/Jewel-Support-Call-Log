@@ -26,7 +26,7 @@ admins dashboards - manage users/passwords, add churches/conferemces, view call 
 
 database field, notes on treasurer
 
-Ask grandpa what to do for yellow conference - confirm instead of alert
+-Ask grandpa what to do for yellow conference - confirm instead of alert
 
 Add agent names
 
@@ -40,8 +40,34 @@ edit (add? remove?) treasurers in church page
 
 figure out the table width stuff...
 
-create a new helper file with functions to call to get certain DB stuff, figure out how to do sql the same there
+-create a new helper file with functions to call to get certain DB stuff, figure out how to do sql the same there
 
 users that aren't agents?
 
 add contact info to conferences Table, show in conference page
+
+remove start/end time from add call data
+-load with current time in start time, add button to set end time to current time
+
+
+
+-show multiple months - see image (this month, last month, previous three months, last year, all)
+
+-custom sort for date column in calls-table
+
+-conference office needs to be church, link to it in conference page
+
+show in conference page if supported
+
+-look into pressing enter searches by church, not conference
+
+-alphabetize churches in conference/church selector
+
+-churches page can get filtered by conference
+
+organize templates in folders
+
+is custom sort the right way? ask mom
+view all link in church/conference page needed? ask mom - removed for now - <a href="/view-calls?conferenceID={{ conference.conferenceID }}">View all</a>
+should pressing enter search by church/conference instead of being disabled? ask mom
+remove "support calls" text in conference page? (And church?) ask mom
